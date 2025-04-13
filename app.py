@@ -16,7 +16,7 @@ tts_client = texttospeech.TextToSpeechClient()
 audio_dir = "audio"
 os.makedirs(audio_dir, exist_ok=True)
 
-@app.route("/speak", methods=["POST"])
+@app.route("/speak", methods=["POST", "OPTIONS"])
 def speak():
     data = request.get_json()
     text = data.get("text")
