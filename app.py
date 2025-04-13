@@ -18,6 +18,9 @@ os.makedirs(audio_dir, exist_ok=True)
 
 @app.route("/speak", methods=["POST", "OPTIONS"])
 def speak():
+    if request.method == "OPTIONS":
+        return '', 204
+
     data = request.get_json()
     text = data.get("text")
     if not text:
