@@ -1,3 +1,5 @@
+print("🚀 Flask server is running with CORS patch")
+
 from flask import Flask, request, send_file
 from flask_cors import CORS
 from google.cloud import texttospeech
