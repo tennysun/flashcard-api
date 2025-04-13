@@ -1,10 +1,12 @@
 from flask import Flask, request, send_file
 from flask_cors import CORS
 from google.cloud import texttospeech
-import os, json
+import os, json, logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/speak": {"origins": "*"}}, supports_credentials=True)
 
 # Setup credentials from environment variable
 if "GOOGLE_APPLICATION_CREDENTIALS_JSON" in os.environ:
@@ -17,12 +19,20 @@ audio_dir = "audio"
 os.makedirs(audio_dir, exist_ok=True)
 
 @app.route("/speak", methods=["POST", "OPTIONS"])
+@app.route("/speak/", methods=["POST", "OPTIONS"])  # Allow both /speak and /speak/
 def speak():
     if request.method == "OPTIONS":
-        return '', 204
+        print("✅ OPTIONS preflight received")
+        response = app.make_response('')
+        response.status_code = 204
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
 
     data = request.get_json()
     text = data.get("text")
+    print(f"🔊 POST /speak received with text: {text}")
     if not text:
         return {"error": "Missing 'text'"}, 400
 
@@ -46,7 +56,13 @@ def speak():
             out.write(response.audio_content)
         return send_file(filename, mimetype="audio/mpeg")
     except Exception as e:
+        print(f"❌ Error: {str(e)}")
         return {"error": str(e)}, 500
+
+@app.errorhandler(404)
+def not_found(e):
+    print(f"⚠️  404 Not Found: {request.method} {request.path}")
+    return {"error": "Not found"}, 404
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
