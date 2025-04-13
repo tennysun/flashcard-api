@@ -1,8 +1,10 @@
 from flask import Flask, request, send_file
+from flask_cors import CORS
 from google.cloud import texttospeech
 import os, json
 
 app = Flask(__name__)
+CORS(app)
 
 # Setup credentials from environment variable
 if "GOOGLE_APPLICATION_CREDENTIALS_JSON" in os.environ:
