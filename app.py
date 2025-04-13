@@ -8,6 +8,14 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 CORS(app, resources={r"/speak": {"origins": "*"}}, supports_credentials=True)
 
+# Manually apply CORS headers to all responses
+@app.after_request
+def apply_cors(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
+
 # Setup credentials from environment variable
 if "GOOGLE_APPLICATION_CREDENTIALS_JSON" in os.environ:
     with open("service-account.json", "w") as f:
@@ -19,16 +27,11 @@ audio_dir = "audio"
 os.makedirs(audio_dir, exist_ok=True)
 
 @app.route("/speak", methods=["POST", "OPTIONS"])
-@app.route("/speak/", methods=["POST", "OPTIONS"])  # Allow both /speak and /speak/
+@app.route("/speak/", methods=["POST", "OPTIONS"])
 def speak():
     if request.method == "OPTIONS":
         print("✅ OPTIONS preflight received")
-        response = app.make_response('')
-        response.status_code = 204
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-        return response
+        return '', 204
 
     data = request.get_json()
     text = data.get("text")
